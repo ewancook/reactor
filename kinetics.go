@@ -2,7 +2,7 @@ package main
 
 import "math"
 
-const R = 4.813
+const R = 8.314
 
 func k1(T float64) float64 {
 	return 5.922 * math.Pow(10, 8) * math.Exp(-209200/R/T)
