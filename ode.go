@@ -48,7 +48,7 @@ func dPdW(alpha, P, P0, T, T0, F, F0 float64) float64 {
 }
 
 func α(beta, area, ρc, ϕ, P0 float64) float64 {
-	return 2 * beta / (area * ρc * (1 - ϕ) * P0) // /102?
+	return 2 * beta / (area * ρc * (1 - ϕ) * P0) / 102
 }
 
 func β(ϕ, G, Dp, μ, ρg float64) float64 {
