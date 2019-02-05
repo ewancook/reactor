@@ -40,7 +40,7 @@ func dTdW(U, D, ρb, Tα, T, reaction_denominator float64, flows, partials map[s
 	heats := reaction1(T, reaction_denominator, partials)*reaction1Enthalpy(T) +
 		reaction2(T, reaction_denominator, partials)*reaction2Enthalpy(T) +
 		reaction3(T, reaction_denominator, partials)*reaction3Enthalpy(T)
-	return (U*(4/D)/ρb*(Tα-T) - heats) / denominator
+	return (U*(4/D)/ρb*(Tα-T) - heats*1000) / denominator
 }
 
 func dPdW(alpha, P, P0, T, T0, F, F0 float64) float64 {
@@ -53,4 +53,8 @@ func α(beta, area, ρc, ϕ, P0 float64) float64 {
 
 func β(ϕ, G, Dp, μ, ρg float64) float64 {
 	return (G * (1 - ϕ) / (ρg * Dp * math.Pow(ϕ, 3))) * (1.75*G + 150*(1-ϕ)*μ/Dp)
+}
+
+func dTαdW(U, D, ρb, T, Tα, G, aveCP float64) float64 {
+	return U * 4 / D / ρb * (T - Tα) / (G * aveCP)
 }
