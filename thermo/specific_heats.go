@@ -5,13 +5,14 @@ import (
 )
 
 var cpData = map[string]func(float64) float64{
-	"CO":  cpCarbonMonoxide,
-	"H2O": cpSteam,
-	"H2":  cpHydrogen,
-	"CO2": cpCarbonDioxide,
-	"CH4": cpMethane,
-	"N2":  cpNitrogen,
-	"O2":  cpOxygen,
+	"CO":   cpCarbonMonoxide,
+	"H2O":  cpSteam,
+	"H2":   cpHydrogen,
+	"CO2":  cpCarbonDioxide,
+	"CH4":  cpMethane,
+	"N2":   cpNitrogen,
+	"O2":   cpOxygen,
+	"C2H6": cpEthane,
 }
 
 func SpecificHeat(compound string, T float64) float64 {
@@ -56,4 +57,10 @@ func cpNitrogen(T float64) float64 {
 func cpOxygen(T float64) float64 {
 	a, b, c, d, e, _, _, _ := shomateOxygen(T)
 	return cpIntegral(T, a, b, c, d, e)
+}
+
+func cpEthane(T float64) float64 {
+	return 4*math.Pow(10, -18)*math.Pow(T, 6) -
+		4*math.Pow(10, -14)*math.Pow(T, 5) + 2*math.Pow(10, -10)*math.Pow(T, 4) -
+		3*math.Pow(10, -7)*math.Pow(T, 3) + 0.0003*math.Pow(T, 2) + 0.0308*T + 29.265
 }

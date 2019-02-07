@@ -5,11 +5,12 @@ import (
 )
 
 var enthalpyData = map[string]func(float64) float64{
-	"CO":  hCarbonMonoxide,
-	"H2O": hSteam,
-	"H2":  hHydrogen,
-	"CO2": hCarbonDioxide,
-	"CH4": hMethane,
+	"CO":   hCarbonMonoxide,
+	"H2O":  hSteam,
+	"H2":   hHydrogen,
+	"CO2":  hCarbonDioxide,
+	"CH4":  hMethane,
+	"C2H6": hEthane,
 }
 
 func Enthalpy(compound string, T float64) float64 {
@@ -44,4 +45,10 @@ func hCarbonDioxide(T float64) float64 {
 func hMethane(T float64) float64 {
 	a, b, c, d, e, f, g, h := shomateMethane(T)
 	return -74.87 + hIntegral(T, a, b, c, d, e, f, g, h)
+}
+
+func hEthane(T float64) float64 {
+	return -84 + (4*math.Pow(10, -18)*math.Pow(T, 7)/7-
+		4*math.Pow(10, -14)*math.Pow(T, 6)/6+2*math.Pow(10, -10)*math.Pow(T, 5)/5-
+		3*math.Pow(10, -7)*math.Pow(T, 4)/4+0.0003*math.Pow(T, 3)/3+0.0308*T*T/2+29.265*T)/1000
 }

@@ -17,6 +17,7 @@ func main() {
 	flowCO := flag.Float64("CO", 0.001, "initial flow of carbon monoxide (mol/s)")
 	flowCO2 := flag.Float64("CO2", 2.988, "initial flow of carbon dioxide (mol/s)")
 	flowH2O := flag.Float64("H2O", 383, "initial flow of steam (mol/s)")
+	flowC2H6 := flag.Float64("C2H6", 10, "initial flow of ethane (mol/s)")
 	ρ := flag.Float64("density", 6.38, "gas density (kg/m^3)")
 	U := flag.Float64("U", 40, "heat transfer coefficient (W/Km^2)")
 	T := flag.Float64("T", 823.15, "initial reactor temperature (K)")
@@ -39,51 +40,51 @@ func main() {
 
 	ρc := *ρb / (1.0 - *ϕ)
 
-	F0 := *flowCO + *flowH2 + *flowCH4 + *flowCO2 + *flowH2O
+	F0 := *flowCO + *flowH2 + *flowCH4 + *flowCO2 + *flowH2O + *flowC2H6
 	area := math.Pi * math.Pow(*D, 2) / 4
 	W := *ρb * area * *l
 	totalFlue := *flueN2 + *flueH2O + *flueCO2 + *flueO2
 	ODEs := func(f la.Vector, h, x float64, y la.Vector) {
-		totalFlow := y[0] + y[1] + y[2] + y[3] + y[4]
+		totalFlow := y[0] + y[1] + y[2] + y[3] + y[4] + y[5]
 		flows := map[string]float64{
-			"CO":  y[0],
-			"H2":  y[1],
-			"CH4": y[2],
-			"CO2": y[3],
-			"H2O": y[4],
+			"CO":   y[0],
+			"H2":   y[1],
+			"CH4":  y[2],
+			"CO2":  y[3],
+			"H2O":  y[4],
+			"C2H6": y[5],
 		}
 		partials := map[string]float64{}
 		for compound, flow := range flows {
-			partials[compound] = flow / totalFlow * y[6]
+			partials[compound] = flow / totalFlow * y[7]
 		}
-		G := (16.04*flows["CH4"] + 44.01*flows["CO2"] + 28.01*flows["CO"] + 2.016*flows["H2"] + 18.015*flows["H2O"]) / 1000 / area
-		denominator := _denominator(y[5], partials)
+		G := (16.04*flows["CH4"] + 44.01*flows["CO2"] + 28.01*flows["CO"] + 2.016*flows["H2"] + 18.015*flows["H2O"] + 30.069*flows["C2H6"]) / 1000 / area
+		denominator := _denominator(y[6], partials)
 		beta := β(*ϕ, G, *Dp, *μ, *ρ)
 		alpha := α(beta, area, ρc, *ϕ, *P)
 
-		aveCP := (thermo.SpecificHeat("N2", y[5])**flueN2 +
-			thermo.SpecificHeat("CO2", y[5])**flueCO2 +
-			thermo.SpecificHeat("H2O", y[5])**flueH2O +
-			thermo.SpecificHeat("O2", y[5])**flueO2) / totalFlue
+		aveCP := (thermo.SpecificHeat("N2", y[6])**flueN2 +
+			thermo.SpecificHeat("CO2", y[6])**flueCO2 +
+			thermo.SpecificHeat("H2O", y[6])**flueH2O +
+			thermo.SpecificHeat("O2", y[6])**flueO2) / totalFlue
 
-		f[0] = dFCOdW(y[5], denominator, partials)
-		f[1] = dFH2dW(y[5], denominator, partials)
-		f[2] = dFCH4dW(y[5], denominator, partials)
-		f[3] = dFCO2dW(y[5], denominator, partials)
-		f[4] = dFH2OdW(y[5], denominator, partials)
-		f[5] = dTdW(*U, *D, *ρb, y[7], y[5], denominator, flows, partials)
-		f[6] = dPdW(alpha, y[6], *P, y[5], *T, totalFlow, F0)
-		f[7] = dTαdW(*U, *D, *ρb, y[5], y[7], totalFlue, aveCP)
+		f[0] = dFCOdW(y[6], denominator, partials)
+		f[1] = dFH2dW(y[6], denominator, partials)
+		f[2] = dFCH4dW(y[6], denominator, partials)
+		f[3] = dFCO2dW(y[6], denominator, partials)
+		f[4] = dFH2OdW(y[6], denominator, partials)
+		f[5] = dFC2H6dW(y[6], partials)
+		f[6] = dTdW(*U, *D, *ρb, y[8], y[6], denominator, flows, partials)
+		f[7] = dPdW(alpha, y[7], *P, y[6], *T, totalFlow, F0)
+		f[8] = dTαdW(*U, *D, *ρb, y[6], y[8], totalFlue, aveCP)
 	}
 
-	config := ode.NewConfig("dopri5", "", nil)
+	config := ode.NewConfig("radau5", "", nil)
+	config.NmaxIt = 1000000
+	config.NmaxSS = 100000
 	config.SetStepOut(true, nil)
 
 	// iteration for 'best'
-	tubes := []float64{}
-	conversions := []float64{}
-	pressures := []float64{}
-
 	var wValues []float64
 	var yValues [][]float64
 
@@ -92,7 +93,8 @@ func main() {
 			*flowH2 / t,
 			*flowCH4 / t,
 			*flowCO2 / t,
-			*flowH2O / t, *T, *P, *Tα}
+			*flowH2O / t,
+			*flowC2H6 / t, *T, *P, *Tα}
 		solver := ode.NewSolver(len(parameters), config, ODEs, nil, nil)
 		defer solver.Free()
 		solver.Solve(la.NewVectorSlice(parameters), 0, W)
@@ -101,34 +103,51 @@ func main() {
 		yValues = solver.Out.GetStepYtableT()
 
 		conversion := 1 - yValues[2][len(wValues)-1]/yValues[2][0]
-		pressureDrop := *P - yValues[6][len(wValues)-1]
-		tubes = append(tubes, t)
-		conversions = append(conversions, conversion)
-		pressures = append(pressures, pressureDrop)
+		pressureDrop := *P - yValues[7][len(wValues)-1]
+
 		if conversion >= 0.75 {
-			fmt.Printf("tubes: %.0f; pressure drop (kPa): %.4f; outlet temperature %2f (K)\n", t, pressureDrop, yValues[5][len(wValues)-1])
+			fmt.Printf("tubes: %.0f; pressure drop (kPa): %.4f; outlet temperature %2f (K)\n", t, pressureDrop, yValues[6][len(wValues)-1])
 			break
 		}
 	}
-	plt.Subplot(2, 2, 1)
-	plt.Plot(tubes, conversions, nil)
-	plt.Grid(nil)
-	plt.SetLabels("Number of Tubes", "Conversion", nil)
+	var conversions []float64
+	var ethaneConversions []float64
 
-	plt.Subplot(2, 2, 2)
-	plt.Plot(tubes, pressures, nil)
-	plt.Grid(nil)
-	plt.SetLabels("Number of Tubes", "Presssure Drop (kPa)", nil)
+	for _, v := range yValues[2] {
+		conversions = append(conversions, 1-v/yValues[2][0])
 
-	plt.Subplot(2, 2, 3)
-	plt.Plot(wValues, yValues[6], nil)
+	}
+
+	for _, e := range yValues[5] {
+		ethaneConversions = append(ethaneConversions, 1-e/yValues[5][0])
+	}
+
+	plt.Subplot(2, 3, 1)
+	plt.Plot(wValues, conversions, nil)
+	plt.Grid(nil)
+	plt.SetLabels("Catalyst (kg)", "Methane Conversion", nil)
+
+	plt.Subplot(2, 3, 2)
+	plt.Plot(wValues, yValues[7], nil)
+	plt.SetTicksNormal()
+	plt.Grid(nil)
+	plt.SetLabels("Catalyst (kg)", "Presssure (kPa)", nil)
+
+	plt.Subplot(2, 3, 3)
+	plt.Plot(wValues, yValues[8], nil)
 	plt.Grid(nil)
 	plt.SetLabels("Catalyst (kg)", "Talpha (K)", nil)
 
-	plt.Subplot(2, 2, 4)
-	plt.Plot(wValues, yValues[5], nil)
+	plt.Subplot(2, 3, 4)
+	plt.Plot(wValues, yValues[6], nil)
 	plt.Grid(nil)
 	plt.SetLabels("Catalyst (kg)", "T (K)", nil)
+
+	plt.Subplot(2, 3, 5)
+	plt.Plot(wValues, ethaneConversions, nil)
+	plt.AxisYmin(0)
+	plt.Grid(nil)
+	plt.SetLabels("Catalyst (kg)", "Ethane Conversion", nil)
 
 	plt.Show()
 }

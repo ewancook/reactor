@@ -13,23 +13,27 @@ func dFCH4dW(T, denominator float64, partials map[string]float64) float64 {
 func dFH2OdW(T, denominator float64, partials map[string]float64) float64 {
 	return -reaction1(T, denominator, partials) -
 		reaction2(T, denominator, partials) -
-		2*reaction3(T, denominator, partials)
+		2*reaction3(T, denominator, partials) - 2*reaction4(T, partials)
 }
 
 func dFH2dW(T, denominator float64, partials map[string]float64) float64 {
 	return 3*reaction1(T, denominator, partials) +
 		reaction2(T, denominator, partials) +
-		4*reaction3(T, denominator, partials)
+		4*reaction3(T, denominator, partials) + 5*reaction4(T, partials)
 }
 
 func dFCOdW(T, denominator float64, partials map[string]float64) float64 {
 	return reaction1(T, denominator, partials) -
-		reaction2(T, denominator, partials)
+		reaction2(T, denominator, partials) + 2*reaction4(T, partials)
 }
 
 func dFCO2dW(T, denominator float64, partials map[string]float64) float64 {
 	return reaction2(T, denominator, partials) +
 		reaction3(T, denominator, partials)
+}
+
+func dFC2H6dW(T float64, partials map[string]float64) float64 {
+	return -reaction4(T, partials)
 }
 
 func dTdW(U, D, ρb, Tα, T, reaction_denominator float64, flows, partials map[string]float64) float64 {
@@ -39,7 +43,7 @@ func dTdW(U, D, ρb, Tα, T, reaction_denominator float64, flows, partials map[s
 	}
 	heats := reaction1(T, reaction_denominator, partials)*reaction1Enthalpy(T) +
 		reaction2(T, reaction_denominator, partials)*reaction2Enthalpy(T) +
-		reaction3(T, reaction_denominator, partials)*reaction3Enthalpy(T)
+		reaction3(T, reaction_denominator, partials)*reaction3Enthalpy(T) + reaction4(T, partials)*reaction4Enthalpy(T)
 	return (U*(4/D)/ρb*(Tα-T) - heats*1000) / denominator
 }
 
