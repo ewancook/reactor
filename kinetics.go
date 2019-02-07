@@ -16,6 +16,10 @@ func k3(T float64) float64 {
 	return 1.093 * math.Pow(10, 3) * math.Exp(-109400/R/T)
 }
 
+func k4(T float64) float64 {
+	return 8 * math.Pow(10, 5) * math.Exp(-75800/R/T) //-75800
+}
+
 func kCO(T float64) float64 {
 	return 5.127 * math.Pow(10, -13) * math.Exp(140000/R/T)
 }
