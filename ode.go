@@ -48,13 +48,13 @@ func dPdW(alpha, P, P0, T, T0, F, F0 float64) float64 {
 }
 
 func α(beta, area, ρc, ϕ, P0 float64) float64 {
-	return 2 * beta / (area * ρc * (1 - ϕ) * P0) / 102
+	return 2 * beta / (area * ρc * (1 - ϕ) * P0 * 1000)
 }
 
 func β(ϕ, G, Dp, μ, ρg float64) float64 {
 	return (G * (1 - ϕ) / (ρg * Dp * math.Pow(ϕ, 3))) * (1.75*G + 150*(1-ϕ)*μ/Dp)
 }
 
-func dTαdW(U, D, ρb, T, Tα, G, aveCP float64) float64 {
-	return U * 4 / D / ρb * (T - Tα) / (G * aveCP)
+func dTαdW(U, D, ρb, T, Tα, mc, aveCP float64) float64 {
+	return U * 4 / D / ρb * (T - Tα) / (mc * aveCP)
 }

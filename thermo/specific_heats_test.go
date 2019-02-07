@@ -86,3 +86,33 @@ func TestMethaneSpecificHeat(t *testing.T) {
 		_compareSpecificHeat(t, res, expected)
 	}
 }
+
+func TestNitrogenSpecificHeat(t *testing.T) {
+	results := map[float64]float64{
+		200:  29.11,
+		500:  29.58,
+		1000: 32.69,
+		2000: 35.97,
+		4000: 37.55,
+		6000: 38.27,
+	}
+	for T, expected := range results {
+		res := SpecificHeat("N2", T)
+		_compareSpecificHeat(t, res, expected)
+	}
+}
+
+func TestOxygenSpecificHeat(t *testing.T) {
+	results := map[float64]float64{
+		200:  29.11,
+		600:  32.11,
+		1000: 34.86,
+		2000: 37.75,
+		4000: 41.42,
+		6000: 44.39,
+	}
+	for T, expected := range results {
+		res := SpecificHeat("O2", T)
+		_compareSpecificHeat(t, res, expected)
+	}
+}

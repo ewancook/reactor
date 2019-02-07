@@ -10,6 +10,8 @@ var cpData = map[string]func(float64) float64{
 	"H2":  cpHydrogen,
 	"CO2": cpCarbonDioxide,
 	"CH4": cpMethane,
+	"N2":  cpNitrogen,
+	"O2":  cpOxygen,
 }
 
 func SpecificHeat(compound string, T float64) float64 {
@@ -43,5 +45,15 @@ func cpCarbonDioxide(T float64) float64 {
 
 func cpMethane(T float64) float64 {
 	a, b, c, d, e, _, _, _ := shomateMethane(T)
+	return cpIntegral(T, a, b, c, d, e)
+}
+
+func cpNitrogen(T float64) float64 {
+	a, b, c, d, e, _, _, _ := shomateNitrogen(T)
+	return cpIntegral(T, a, b, c, d, e)
+}
+
+func cpOxygen(T float64) float64 {
+	a, b, c, d, e, _, _, _ := shomateOxygen(T)
 	return cpIntegral(T, a, b, c, d, e)
 }
