@@ -39,5 +39,5 @@ func reaction3(T, denominator float64, partials map[string]float64) float64 {
 }
 
 func reaction4(T float64, partials map[string]float64) float64 {
-	return (k4(T) * partials["C2H6"]) / Pow(1+25.2*partials["C2H6"]*partials["H2"]/partials["H2O"]+0.077*partials["H2O"]/partials["H2"], 2) / 3.6
+	return (k4(T) * partials["C2H6"]) / Pow(1+25.2*partials["C2H6"]/100*partials["H2"]/partials["H2O"]+0.077*partials["H2O"]/partials["H2"], 2) / 3.6
 }
