@@ -29,6 +29,8 @@ func main() {
 	Dp := flag.Float64("Dp", 0.013, "particle diameter (m)")
 	ρb := flag.Float64("catalyst-density", 870, "catalyst-density (kg/m^3)")
 	l := flag.Float64("l", 15, "tube length (m)")
+	t := flag.Float64("tubes", 200, "number of tubes")
+	nograph := flag.Bool("nograph", false, "stops plotting of graphs")
 
 	// flue gases
 	flueN2 := flag.Float64("flueN2", 738.5, "flue flowrate of nitrogen (mol/s)")
@@ -80,36 +82,27 @@ func main() {
 	}
 
 	config := ode.NewConfig("radau5", "", nil)
-	config.NmaxIt = 1000000
-	config.NmaxSS = 100000
 	config.SetStepOut(true, nil)
 
-	// iteration for 'best'
-	var wValues []float64
-	var yValues [][]float64
+	parameters := []float64{*flowCO / *t,
+		*flowH2 / *t,
+		*flowCH4 / *t,
+		*flowCO2 / *t,
+		*flowH2O / *t,
+		*flowC2H6 / *t, *T, *P, *Tα}
+	F0 = F0 / *t
+	solver := ode.NewSolver(len(parameters), config, ODEs, nil, nil)
+	defer solver.Free()
+	solver.Solve(la.NewVectorSlice(parameters), 0, W)
 
-	for t := 50.0; t <= 600.0; t++ {
-		parameters := []float64{*flowCO / t,
-			*flowH2 / t,
-			*flowCH4 / t,
-			*flowCO2 / t,
-			*flowH2O / t,
-			*flowC2H6 / t, *T, *P, *Tα}
-		solver := ode.NewSolver(len(parameters), config, ODEs, nil, nil)
-		defer solver.Free()
-		solver.Solve(la.NewVectorSlice(parameters), 0, W)
+	wValues := solver.Out.GetStepX()
+	yValues := solver.Out.GetStepYtableT()
 
-		wValues = solver.Out.GetStepX()
-		yValues = solver.Out.GetStepYtableT()
+	conversion := 1 - yValues[2][len(wValues)-1]/yValues[2][0]
+	pressureDrop := *P - yValues[7][len(wValues)-1]
 
-		conversion := 1 - yValues[2][len(wValues)-1]/yValues[2][0]
-		pressureDrop := *P - yValues[7][len(wValues)-1]
+	fmt.Printf("tubes: %.0f; conversion: %.2f; pressure drop (kPa): %.4f; outlet temperature %2f (K)\n", *t, conversion, pressureDrop, yValues[6][len(wValues)-1])
 
-		if conversion >= 0.75 {
-			fmt.Printf("tubes: %.0f; pressure drop (kPa): %.4f; outlet temperature %2f (K)\n", t, pressureDrop, yValues[6][len(wValues)-1])
-			break
-		}
-	}
 	var conversions []float64
 	var ethaneConversions []float64
 
@@ -120,6 +113,10 @@ func main() {
 
 	for _, e := range yValues[5] {
 		ethaneConversions = append(ethaneConversions, 1-e/yValues[5][0])
+	}
+
+	if *nograph {
+		return
 	}
 
 	plt.Subplot(2, 3, 1)
