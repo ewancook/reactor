@@ -78,7 +78,7 @@ func main() {
 		f[5] = dFC2H6dW(y[6], partials)
 		f[6] = dTdW(*U, *D, *ρb, y[8], y[6], denominator, flows, partials)
 		f[7] = dPdW(alpha, y[7], *P, y[6], *T, totalFlow, F0)
-		f[8] = dTαdW(*U, *D, *ρb, y[6], y[8], totalFlue, aveCP)
+		f[8] = dTαdW(*U, *D, *ρb, y[6], y[8], totalFlue, aveCP) * *t
 	}
 
 	config := ode.NewConfig("radau5", "", nil)
@@ -102,7 +102,15 @@ func main() {
 	pressureDrop := *P - yValues[7][len(wValues)-1]
 
 	fmt.Printf("tubes: %.0f; conversion: %.2f; pressure drop (kPa): %.4f; outlet temperature %2f (K)\n", *t, conversion, pressureDrop, yValues[6][len(wValues)-1])
+	flows := []float64{parameters[0] * *t,
+		parameters[1] * *t,
+		parameters[2] * *t,
+		parameters[3] * *t,
+		parameters[4] * *t,
+		parameters[5] * *t,
+	}
 
+	fmt.Printf("flows (mol/s); CO: %.2f; H2: %.2f; CH4: %.2f; CO2: %.2f; H2O %.2f; C2H6: %.2f\n", flows[0], flows[1], flows[2], flows[3], flows[4], flows[5])
 	var conversions []float64
 	var ethaneConversions []float64
 
