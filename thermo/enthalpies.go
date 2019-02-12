@@ -48,9 +48,7 @@ func hMethane(T float64) float64 {
 }
 
 func _ethaneIntegral(T float64) float64 {
-	return (4*math.Pow(10, -18)*math.Pow(T, 7)/7 -
-		4*math.Pow(10, -14)*math.Pow(T, 6)/6 + 2*math.Pow(10, -10)*math.Pow(T, 5)/5 -
-		3*math.Pow(10, -7)*math.Pow(T, 4)/4 + 0.0003*math.Pow(T, 3)/3 + 0.0308*T*T/2 + 29.265*T) / 1000
+	return (7.56*T + 0.16*math.Pow(T, 2)/2 - 3.208*math.Pow(10, -5)*math.Pow(T, 3)/3 - 2.476*math.Pow(10, -8)*math.Pow(T, 4)/4 + 1.016*math.Pow(10, -11)*math.Pow(T, 5)/5) / 1000
 }
 
 func hEthane(T float64) float64 {
